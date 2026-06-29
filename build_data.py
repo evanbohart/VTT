@@ -11,13 +11,13 @@ def build_df():
 
         with open(file, 'r', encoding='utf-8') as f:
             for line in f:
-                id, transcript = line.strip().split(' ', 1)
-                path = folder/f'{id}.flac'
+                utt_id, transcript = line.strip().split(' ', 1)
+                path = folder/f'{utt_id}.flac'
 
                 if path.exists():
                     rows.append({
-                        'id': id,
-                        'path': str(path),
+                        'id': utt_id,
+                        'path': str(path.as_posix()),
                         'transcript': transcript
                     })
 
@@ -25,3 +25,5 @@ def build_df():
     df.to_parquet('data.parquet', index=False)
 
     return df
+
+build_df()

@@ -51,7 +51,7 @@ class Model(nn.Module):
         decoder_x,
         src_padding_mask,
         tgt_padding_mask,
-        tgt_casual_mask
+        tgt_causal_mask
     ):
         encoder_x = self.encoder_proj(encoder_x)
         encoder_x = self.pe(encoder_x)
@@ -64,5 +64,5 @@ class Model(nn.Module):
             decoder_x,
             src_padding_mask,
             tgt_padding_mask,
-            tgt_casual_mask
+            tgt_causal_mask
         )

@@ -211,12 +211,12 @@ class DecoderBlock(nn.Module):
         encoder_output,
         src_padding_mask,
         tgt_padding_mask,
-        tgt_casual_mask
+        tgt_causal_mask
     ):
         x = self.res_connections[0](
             x,
             lambda x: self.sa(
-                x, x, x, tgt_padding_mask | tgt_casual_mask
+                x, x, x, tgt_padding_mask | tgt_causal_mask
             )
         )
         x = self.res_connections[1](
@@ -261,7 +261,7 @@ class Decoder(nn.Module):
             encoder_output,
             src_padding_mask,
             tgt_padding_mask,
-            tgt_casual_mask
+            tgt_causal_mask
     ):
         #x: (batch, seq_len, d_model)
         for block in self.blocks:
@@ -270,7 +270,7 @@ class Decoder(nn.Module):
                 encoder_output,
                 src_padding_mask,
                 tgt_padding_mask,
-                tgt_casual_mask
+                tgt_causal_mask
             )
 
         return self.norm(x)
@@ -344,11 +344,11 @@ class Transformer(nn.Module):
         decoder_x,
         src_padding_mask,
         tgt_padding_mask,
-        tgt_casual_mask
+        tgt_causal_mask
     ):
         src_padding_mask = src_padding_mask[:, None, None]
         tgt_padding_mask = tgt_padding_mask[:, None, None].expand(-1, -1, decoder_x.shape[1], -1)
-        tgt_casual_mask = tgt_casual_mask[None, None] 
+        tgt_causal_mask = tgt_causal_mask[None, None] 
 
         # x: (batch, seq_len, d_model)
         encoder_x = self.encoder(
@@ -360,7 +360,7 @@ class Transformer(nn.Module):
             encoder_x,
             src_padding_mask,
             tgt_padding_mask,
-            tgt_padding_mask
+            tgt_causal_mask
         )
 
         # x -> (batch, seq_len, vocab_size)

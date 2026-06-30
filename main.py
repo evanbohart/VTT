@@ -19,6 +19,8 @@ decoder_seq_len = 64
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+torch.cuda.amp.autocast()
+
 data = Data(
     torchaudio.datasets.LIBRISPEECH(
         root='.',

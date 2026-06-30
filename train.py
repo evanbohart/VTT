@@ -10,7 +10,7 @@ def train(
     scaler
 ):
     tgt_causal_mask = torch.triu(
-        torch.ones(decoder_seq_len, decoder_seq_len, dtype=torch.bool),
+        torch.ones(model.decoder_seq_len, model.decoder_seq_len, dtype=torch.bool),
         diagonal=1
     )
 

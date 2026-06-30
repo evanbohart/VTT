@@ -21,6 +21,16 @@ class Model(nn.Module):
         super().__init__()
 
         self.vocab_size = vocab_size
+        self.d_model = d_model
+        self.encoder_x_dim = encoder_x_dim
+        self.encoder_seq_len = encoder_seq_len
+        self.decoder_seq_len = decoder_seq_len
+        self.h = h
+        self.d_k = d_k
+        self.d_v = d_v
+        self.d_ff = d_ff
+        self.n = n
+        self.dropout = dropout
 
         self.encoder_proj = nn.Linear(encoder_x_dim, d_model)
         self.decoder_embed = Embedding(

@@ -86,32 +86,32 @@ class Data(Dataset):
             mel = (mel - mel.mean()) / (mel.std() + 1e-9)
 
             mel_len = mel.shape[0]
-            encoder_len_diff = max_sample_len - mel_len
+            encoder_len_diff = self.max_sample_len - mel_len
 
             transcript_encoded = self.encode(transcript, self.vocab)
 
             transcript_len = len(transcript_encoded)
-            decoder_len_diff = max_transcript_len - (transcript_len + 1)
+            decoder_len_diff = self.max_transcript_len - (transcript_len + 1)
 
             encoder_x.append(
                 nn.functional.pad(mel, (0, 0, 0, encoder_len_diff))
             )
 
             src_padding_mask.append(
-                (torch.arange(max_sample_len) >= mel_len).to(self.device)
+                (torch.arange(self.max_sample_len) >= mel_len).to(self.device)
             )
 
             decoder_x.append(
-                torch.zeros((max_transcript_len), dtype=torch.long, device=self.device)
+                torch.zeros((self.max_transcript_len), dtype=torch.long, device=self.device)
             )
             decoder_x[-1][0] = vocab['<BOS>']
 
             tgt_padding_mask.append(
-                (torch.arange(max_transcript_len) >= transcript_len).to(self.device)
+                (torch.arange(self.max_transcript_len) >= transcript_len).to(self.device)
             )
 
             targets.append(
-                torch.full((max_transcript_len,), -1, dtype=torch.long, device=self.device)
+                torch.full((self.max_transcript_len,), -1, dtype=torch.long, device=self.device)
             )
 
             for i in range(len(transcript_encoded)):

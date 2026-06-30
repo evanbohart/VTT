@@ -121,7 +121,7 @@ class Data(Dataset):
                 decoder_x[-1][i+1] = transcript_encoded[i]
                 targets[-1][i] = transcript_encoded[i]
 
-                targets[-1][max_transcript_len-1] = self.vocab['<EOS>']
+                targets[-1][self.max_transcript_len-1] = self.vocab['<EOS>']
 
         encoder_x_batch = torch.stack(encoder_x)
         decoder_x_batch = torch.stack(decoder_x)

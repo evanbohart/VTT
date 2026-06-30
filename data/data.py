@@ -93,8 +93,8 @@ class Data(Dataset):
 
             transcript_encoded = self.encode(transcript, self.vocab)
 
-            transcript_len = len(transcript_encoded)
-            decoder_len_diff = self.max_transcript_len - (transcript_len + 1)
+            transcript_len = len(transcript_encoded) + 1
+            decoder_len_diff = self.max_transcript_len - transcript_len
 
             encoder_x.append(
                 nn.functional.pad(mel, (0, 0, 0, encoder_len_diff))
@@ -121,7 +121,7 @@ class Data(Dataset):
                 decoder_x[-1][i+1] = transcript_encoded[i]
                 targets[-1][i] = transcript_encoded[i]
 
-                targets[-1][self.max_transcript_len-1] = self.vocab['<EOS>']
+            targets[-1][transcript_len-1] = self.vocab['<EOS>']
 
         encoder_x_batch = torch.stack(encoder_x)
         decoder_x_batch = torch.stack(decoder_x)

@@ -52,7 +52,7 @@ class Data(Dataset):
             sample_rate=8000,
             n_fft=400,
             hop_length=256,
-            n_mels=n_mels,
+            n_mels=n_mels
         )(waveform)
 
         self.to_db = transforms.AmplitudeToDB()
@@ -80,7 +80,8 @@ class Data(Dataset):
         for waveform, sr, transcript, *_, in batch:
             waveform = functional.resample(waveform, sr, 8000)
 
-            mel = self.to_mel(waveform).to(self.device)
+            mel = self.to_mel(waveform)
+            mel = mel.to(self.device)
             mel = self.to_db(mel)
             mel = mel.squeeze(0).transpose(0, 1)
             mel = (mel - mel.mean()) / (mel.std() + 1e-9)

@@ -50,7 +50,7 @@ class Data(Dataset):
         self.device = device
 
         self.to_mel = transforms.MelSpectrogram(
-            sample_rate=8000,
+            sample_rate=16000,
             n_fft=n_fft,
             hop_length=hop_len,
             n_mels=n_mels
@@ -81,8 +81,6 @@ class Data(Dataset):
         targets = []
 
         for waveform, sr, transcript, *_, in batch:
-            waveform = functional.resample(waveform, sr, 8000)
-
             mel = self.to_mel(waveform).to(self.device)
             mel = self.to_db(mel)
             mel = mel.squeeze(0).transpose(0, 1)

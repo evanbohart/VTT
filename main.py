@@ -1,6 +1,5 @@
 from model.model import Model
 from data.data import Data
-from data.tokenizer import build_vocab
 from train import train
 
 import torch

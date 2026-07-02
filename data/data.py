@@ -112,7 +112,7 @@ class Data(Dataset):
             )
 
             targets.append(
-                torch.zeros(self.max_transcript_len, -1, dtype=torch.long, device=self.device)
+                torch.fill((self.max_transcript_len,), -1, dtype=torch.long, device=self.device)
             )
 
             for i in range(transcript_len-1):

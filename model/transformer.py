@@ -112,7 +112,7 @@ class MultiHeadAttention(nn.Module):
         a = (q @ k_T) / math.sqrt(d_k) # (batch, h, seq_len, seq_len)
 
         if mask is not None:
-            a.masked_fill_(mask, float('-inf'))
+            a.masked_fill_(mask, torch.finfo(a.dtype).min)
 
         a = dropout(a.softmax(-1))
 

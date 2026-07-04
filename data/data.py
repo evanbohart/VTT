@@ -16,7 +16,6 @@ class Data(Dataset):
         n_mels: int,
         max_sample_len: int,
         max_transcript_len: int,
-        device: torch.device
     ):
         self.dataset = dataset
         self.max_sample_len = max_sample_len
@@ -47,7 +46,6 @@ class Data(Dataset):
             transcripts.append(transcript)
 
         self.vocab = build_vocab(transcripts)
-        self.device = device
 
         self.to_mel = transforms.MelSpectrogram(
             sample_rate=16000,
@@ -81,10 +79,10 @@ class Data(Dataset):
         targets = []
 
         for waveform, sr, transcript, *_, in batch:
-            mel = self.to_mel(waveform).to(self.device)
+            mel = self.to_mel(waveform)
             mel = self.to_db(mel)
             mel = mel.squeeze(0).transpose(0, 1)
-            mel = (mel - mel.mean()) / (mel.std() + 1e-9)
+            mel = (mel - mel.mean()) / (mel.std() + 1e-6)
 
             mel_len = mel.shape[0]
             encoder_len_diff = self.max_sample_len - mel_len
@@ -94,33 +92,35 @@ class Data(Dataset):
             transcript_len = len(transcript_encoded) + 1
             decoder_len_diff = self.max_transcript_len - transcript_len
 
-            if encoder_len_diff > 0 && decoder_len_diff > 0:
+            if encoder_len_diff >= 0 && decoder_len_diff >= 0:
                 encoder_x.append(
                     nn.functional.pad(mel, (0, 0, 0, encoder_len_diff))
                 )
 
                 src_padding_mask.append(
-                    (torch.arange(self.max_sample_len) >= mel_len).to(self.device)
+                    torch.arange(self.max_sample_len) >= mel_len
                 )
 
                 decoder_x.append(
-                    torch.zeros(self.max_transcript_len, dtype=torch.long, device=self.device)
+                    torch.zeros(self.max_transcript_len, dtype=torch.long)
                 )
-                decoder_x[-1][0] = self.vocab['<BOS>']
+
+                decoder_x[-1][1:transcript_len] = transcript_encoded
 
                 tgt_padding_mask.append(
-                    (torch.arange(self.max_transcript_len) >= transcript_len).to(self.device)
+                    torch.arange(self.max_transcript_len) >= transcript_len
                 )
 
                 targets.append(
-                    torch.full((self.max_transcript_len,), -1, dtype=torch.long, device=self.device)
+                    torch.full((self.max_transcript_len,), -1, dtype=torch.long)
                 )
 
-                for i in range(transcript_len-1):
-                    decoder_x[-1][i+1] = transcript_encoded[i]
-                    targets[-1][i] = transcript_encoded[i]
+                targets[-1][:transcript_len-1] = transcript_encoded
 
+                decoder_x[-1][0] = self.vocab['<BOS>']
                 targets[-1][transcript_len-1] = self.vocab['<EOS>']
+            else:
+                print("Problem")
 
             encoder_x_batch = torch.stack(encoder_x)
             decoder_x_batch = torch.stack(decoder_x)

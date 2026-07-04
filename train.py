@@ -34,10 +34,10 @@ def train(
 
             with torch.cuda.amp.autocast():
                 logits = model(
-                    encoder_x_batch,
-                    decoder_x_batch,
-                    src_padding_mask_batch,
-                    tgt_padding_mask_batch,
+                    encoder_x_batch.to(device),
+                    decoder_x_batch.to(device),
+                    src_padding_mask_batch.to(device),
+                    tgt_padding_mask_batch.to(device),
                     tgt_causal_mask
                 )
 

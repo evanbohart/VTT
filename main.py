@@ -13,7 +13,7 @@ batch_size = 30
 n_fft = 400
 hop_len = 160
 n_mels = 80
-encoder_seq_len = 1800
+encoder_seq_len = 1600
 decoder_seq_len = 64
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -29,7 +29,6 @@ data = Data(
     n_mels,
     encoder_seq_len,
     decoder_seq_len,
-    device
 )
 
 loader = DataLoader(
@@ -37,10 +36,6 @@ data,
     batch_size=batch_size,
     shuffle=True,
     collate_fn=data.collate_fn,
-    num_workers=2,
-    pin_memory=True,
-    persistent_workers=True,
-    prefetch_factor=2
 )
 
 d_model = 512

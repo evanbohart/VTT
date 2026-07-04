@@ -33,14 +33,20 @@ class Model(nn.Module):
         self.dropout = dropout
 
         self.encoder_proj = nn.Linear(encoder_x_dim, d_model)
+
+        self.encoder_pe = PositionalEncoding(
+            d_model=d_model,
+            seq_len=encoder_seq_len,
+            dropout=dropout
+        )
+
         self.decoder_embed = Embedding(
             vocab_size=vocab_size,
             d_model=d_model
         )
-
-        self.pe = PositionalEncoding(
+        self.decoder_pe = PositionalEncoding(
             d_model=d_model,
-            seq_len=encoder_seq_len,
+            seq_len=decoder_seq_len,
             dropout=dropout
         )
 
@@ -66,10 +72,10 @@ class Model(nn.Module):
         tgt_causal_mask
     ):
         encoder_x = self.encoder_proj(encoder_x)
-        encoder_x = self.pe(encoder_x)
+        encoder_x = self.encoder_pe(encoder_x)
 
         decoder_x = self.decoder_embed(decoder_x)
-        decoder_x = self.pe(decoder_x)
+        decoder_x = self.deocder_pe(decoder_x)
 
         return self.transformer(
             encoder_x,

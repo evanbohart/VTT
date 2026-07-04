@@ -12,8 +12,8 @@ batch_size = 30
 
 n_fft = 400
 hop_len = 160
-n_mels = 40
-encoder_seq_len = 600
+n_mels = 80
+encoder_seq_len = 1800
 decoder_seq_len = 64
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

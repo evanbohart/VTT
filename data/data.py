@@ -89,50 +89,51 @@ class Data(Dataset):
             mel_len = mel.shape[0]
             encoder_len_diff = self.max_sample_len - mel_len
 
-            transcript_encoded = self.encode(transcript, self.vocab)
+            transcript_encoded = Data.encode(transcript, self.vocab)
 
             transcript_len = len(transcript_encoded) + 1
             decoder_len_diff = self.max_transcript_len - transcript_len
 
-            encoder_x.append(
-                nn.functional.pad(mel, (0, 0, 0, encoder_len_diff))
+            if encoder_len_diff > 0 && decoder_len_diff > 0:
+                encoder_x.append(
+                    nn.functional.pad(mel, (0, 0, 0, encoder_len_diff))
+                )
+
+                src_padding_mask.append(
+                    (torch.arange(self.max_sample_len) >= mel_len).to(self.device)
+                )
+
+                decoder_x.append(
+                    torch.zeros(self.max_transcript_len, dtype=torch.long, device=self.device)
+                )
+                decoder_x[-1][0] = self.vocab['<BOS>']
+
+                tgt_padding_mask.append(
+                    (torch.arange(self.max_transcript_len) >= transcript_len).to(self.device)
+                )
+
+                targets.append(
+                    torch.full((self.max_transcript_len,), -1, dtype=torch.long, device=self.device)
+                )
+
+                for i in range(transcript_len-1):
+                    decoder_x[-1][i+1] = transcript_encoded[i]
+                    targets[-1][i] = transcript_encoded[i]
+
+                targets[-1][transcript_len-1] = self.vocab['<EOS>']
+
+            encoder_x_batch = torch.stack(encoder_x)
+            decoder_x_batch = torch.stack(decoder_x)
+
+            src_padding_mask_batch = torch.stack(src_padding_mask)
+            tgt_padding_mask_batch = torch.stack(tgt_padding_mask)
+
+            targets_batch = torch.stack(targets)
+
+            return (
+                encoder_x_batch,
+                decoder_x_batch,
+                src_padding_mask_batch,
+                tgt_padding_mask_batch,
+                targets_batch
             )
-
-            src_padding_mask.append(
-                (torch.arange(self.max_sample_len) >= mel_len).to(self.device)
-            )
-
-            decoder_x.append(
-                torch.zeros(self.max_transcript_len, dtype=torch.long, device=self.device)
-            )
-            decoder_x[-1][0] = self.vocab['<BOS>']
-
-            tgt_padding_mask.append(
-                (torch.arange(self.max_transcript_len) >= transcript_len).to(self.device)
-            )
-
-            targets.append(
-                torch.full((self.max_transcript_len,), -1, dtype=torch.long, device=self.device)
-            )
-
-            for i in range(transcript_len-1):
-                decoder_x[-1][i+1] = transcript_encoded[i]
-                targets[-1][i] = transcript_encoded[i]
-
-            targets[-1][transcript_len-1] = self.vocab['<EOS>']
-
-        encoder_x_batch = torch.stack(encoder_x)
-        decoder_x_batch = torch.stack(decoder_x)
-
-        src_padding_mask_batch = torch.stack(src_padding_mask)
-        tgt_padding_mask_batch = torch.stack(tgt_padding_mask)
-
-        targets_batch = torch.stack(targets)
-
-        return (
-            encoder_x_batch,
-            decoder_x_batch,
-            src_padding_mask_batch,
-            tgt_padding_mask_batch,
-            targets_batch
-        )

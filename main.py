@@ -8,12 +8,13 @@ import torch.optim as optim
 import torchaudio
 from torch.utils.data import DataLoader
 
-batch_size = 30
+batch_size = 4
+accum_steps = 8
 
 n_fft = 400
 hop_len = 160
 n_mels = 80
-encoder_seq_len = 1600
+encoder_seq_len = 1000
 decoder_seq_len = 64
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -66,7 +67,17 @@ model.train()
 nn.utils.clip_grad_norm(model.parameters(), 1.0)
 
 criterion = nn.CrossEntropyLoss(ignore_index=0)
-optimizer = optim.AdamW(model.parameters(), lr=3e-4, betas=(0.9,0.98), eps=1e-9, weight_decay=0.01)
+optimizer = optim.AdamW(model.parameters(), lr=1e-4, betas=(0.9,0.98), eps=1e-9, weight_decay=0.01)
+
+def lr_lambda(step):
+    warmup_steps = 1000
+
+    if step > warmup_steps:
+        return 1.0
+
+    return step / warmup_steps
+
+scheduler = optim.lr_scheduler.LRScheduler(optimizer, lr_lambda=lr_lambda)
 
 scaler = torch.amp.GradScaler("cuda")
 
@@ -74,10 +85,12 @@ epochs = 100
 
 train(
     epochs,
+    accum_steps,
     loader,
     model,
     criterion,
     optimizer,
+    scheduler,
     scaler,
     device
 )

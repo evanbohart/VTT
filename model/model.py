@@ -75,7 +75,7 @@ class Model(nn.Module):
         encoder_x = self.encoder_pe(encoder_x)
 
         decoder_x = self.decoder_embed(decoder_x)
-        decoder_x = self.deocder_pe(decoder_x)
+        decoder_x = self.decoder_pe(decoder_x)
 
         return self.transformer(
             encoder_x,

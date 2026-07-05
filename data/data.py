@@ -92,7 +92,7 @@ class Data(Dataset):
             transcript_len = len(transcript_encoded) + 1
             decoder_len_diff = self.max_transcript_len - transcript_len
 
-            if encoder_len_diff >= 0 && decoder_len_diff >= 0:
+            if encoder_len_diff >= 0 and decoder_len_diff >= 0:
                 encoder_x.append(
                     nn.functional.pad(mel, (0, 0, 0, encoder_len_diff))
                 )
@@ -112,7 +112,7 @@ class Data(Dataset):
                 )
 
                 targets.append(
-                    torch.full((self.max_transcript_len,), -1, dtype=torch.long)
+                    torch.zeros(self.max_transcript_len, dtype=torch.long)
                 )
 
                 targets[-1][:transcript_len-1] = transcript_encoded
@@ -122,18 +122,18 @@ class Data(Dataset):
             else:
                 print("Problem")
 
-            encoder_x_batch = torch.stack(encoder_x)
-            decoder_x_batch = torch.stack(decoder_x)
+        encoder_x_batch = torch.stack(encoder_x)
+        decoder_x_batch = torch.stack(decoder_x)
 
-            src_padding_mask_batch = torch.stack(src_padding_mask)
-            tgt_padding_mask_batch = torch.stack(tgt_padding_mask)
+        src_padding_mask_batch = torch.stack(src_padding_mask)
+        tgt_padding_mask_batch = torch.stack(tgt_padding_mask)
 
-            targets_batch = torch.stack(targets)
+        targets_batch = torch.stack(targets)
 
-            return (
-                encoder_x_batch,
-                decoder_x_batch,
-                src_padding_mask_batch,
-                tgt_padding_mask_batch,
-                targets_batch
-            )
+        return (
+            encoder_x_batch,
+            decoder_x_batch,
+            src_padding_mask_batch,
+            tgt_padding_mask_batch,
+            targets_batch
+        )

@@ -2,10 +2,12 @@ import torch
 
 def train(
     epochs,
+    accum_steps,
     loader,
     model,
     criterion,
     optimizer,
+    scheduler,
     scaler,
     device
 ):
@@ -16,10 +18,15 @@ def train(
         diagonal=1
     )
 
-    batch_num = 0
+    batches = len(loader)
+    assert batches % accum_steps == 0
 
     for i in range(epochs):
-        for batch in loader:
+        optimizer.zero_grad()
+
+        running_loss = 0.0
+
+        for batch_num, batch in enumerate(loader, 1):
             (
                 encoder_x_batch,
                 decoder_x_batch,
@@ -27,10 +34,6 @@ def train(
                 tgt_padding_mask_batch,
                 targets_batch
             ) = batch
-
-            print('Feeding forward...')
-
-            optimizer.zero_grad()
 
             with torch.cuda.amp.autocast():
                 logits = model(
@@ -43,17 +46,24 @@ def train(
 
                 loss = criterion(
                     logits.view(-1, model.vocab_size),
-                    targets_batch.view(-1)
+                    targets_batch.to(device).view(-1)
                 )
 
-            scaler.scale(loss).backward()
-            scaler.step(optimizer)
-            scaler.update()
+            running_loss += loss.item()
 
-            print(f"Epoch: {i+1} | Batch: {batch_num} | Loss: {loss.item():.4f}")
+            scaler.scale(loss/accum_steps).backward()
 
-            batch_num += 1
+            if batch_num % accum_steps == 0:
+                scaler.step(optimizer)
+                scaler.update()
 
-        batch_num = 0
+                optimizer.zero_grad()
+
+                scheduler.step()
+
+                print(
+                    f"Epoch: {i+1} | Batch: {batch_num} | "
+                    f"Loss: {running_loss:.4f}"
+                )
 
     torch.save(model.state_dict(), "model.pt")

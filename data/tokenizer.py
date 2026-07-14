@@ -1,30 +1,62 @@
-def tokenize(text):
-    tokens = []
+from collections import Counter
 
-    for word in text.split():
-        token = ''.join(
-            char.lower() if char.isalnum() else ''
-            for char in word
-        )
+def merge(splits):
+    pairs = []
 
-        if token and token not in tokens:
-            tokens.append(token)
+    for split in splits:
+        for i in range(len(split)-1):
+            pairs.append(split[i], split[i+1])
 
-    return tokens
+    counts = Counter(pairs)
+
+    if not counts:
+        return None
+
+    pair, _ = counts.most_common(1)[0]
+    left, right = pair
+
+    for split in splits:
+        i = 0
+        while i < len(split) - 1:
+            if split[i] == left split[i+1] == right:
+                split[i] = left + right
+                split.pop(i+1)
+            else:
+                i += 1
+
+    return pair
+
 
 def build_vocab(transcripts):
     vocab = {}
 
-    vocab['<PAD>']= 0
+    vocab['<EOS>']= 0
     vocab['<BOS>'] = 1
     vocab['<EOS>'] = 2
 
     next_id = 3
 
+    merges = []
+
+    splits = []
+
     for transcript in transcripts:
-        for token in tokenize(transcript):
-            if token and token not in vocab:
-                vocab[token] = next_id
+        splits.append(list(transcript))
+
+    for split in splits:
+        for ch in split:
+            if ch not in vocab:
+                vocab[ch] = next_id
                 next_id += 1
 
-    return vocab
+    while len(vocab) < 30_000:
+        pair = merge(splits)
+        left, right = pair
+
+        if pair is not None:
+            vocab[left+right] = next_id
+            next_id += 1
+
+            merges.append(pair)
+
+    return vocab, merges

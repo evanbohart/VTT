@@ -16,6 +16,8 @@ class Data(Dataset):
         n_mels: int,
         max_sample_len: int,
         max_transcript_len: int,
+        vocab: dict,
+        merges: list
     ):
         self.dataset = dataset
         self.max_sample_len = max_sample_len
@@ -25,7 +27,7 @@ class Data(Dataset):
         max_waveform_len = (max_sample_len - 1) * hop_len + n_fft
 
         for i in range(len(dataset)):
-            waveform, sr, transcript, *_ = dataset[i]
+        waveform, sr, transcript, *_ = dataset[i]
 
             waveform_len = waveform.shape[-1]
 
@@ -45,7 +47,11 @@ class Data(Dataset):
 
             transcripts.append(transcript)
 
-        self.vocab = build_vocab(transcripts)
+        if vocab == None or merges == None:
+            self.vocab, self.merges = build_vocab(transcripts)
+        else:
+            self.vocab = vocab
+            self.merges = merges
 
         self.to_mel = transforms.MelSpectrogram(
             sample_rate=16000,
@@ -62,12 +68,20 @@ class Data(Dataset):
     def __getitem__(self, index):
         return self.dataset[self.valid_indices[index]]
 
-    @staticmethod
-    def encode(transcript, vocab):
-        tokens = tokenize(transcript)
+    def encode(self, transcript):
+        tokens = list(transcript)
 
-        return torch.tensor([vocab[token] for token in tokens if token])
+        for left, right in self.merges:
+            i = 0
 
+            while i < len(tokens) - 1:
+                if tokens[i] == left and tokens[i+1] == right:
+                    tokens[i] = left + right
+                    tokens.pop(i+1)
+                else:
+                    i += 1
+
+        return [vocab[token] for token in tokens]
 
     def collate_fn(self, batch):
         encoder_x = []
@@ -87,7 +101,7 @@ class Data(Dataset):
             mel_len = mel.shape[0]
             encoder_len_diff = self.max_sample_len - mel_len
 
-            transcript_encoded = Data.encode(transcript, self.vocab)
+            transcript_encoded = self.encode(transcript)
 
             transcript_len = len(transcript_encoded) + 1
             decoder_len_diff = self.max_transcript_len - transcript_len
@@ -119,8 +133,6 @@ class Data(Dataset):
 
                 decoder_x[-1][0] = self.vocab['<BOS>']
                 targets[-1][transcript_len-1] = self.vocab['<EOS>']
-            else:
-                print("Problem")
 
         encoder_x_batch = torch.stack(encoder_x)
         decoder_x_batch = torch.stack(decoder_x)

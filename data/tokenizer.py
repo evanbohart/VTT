@@ -5,7 +5,7 @@ def merge(splits):
 
     for split in splits:
         for i in range(len(split)-1):
-            pairs.append(split[i], split[i+1])
+            pairs.append((split[i], split[i+1]))
 
     counts = Counter(pairs)
 
@@ -18,7 +18,7 @@ def merge(splits):
     for split in splits:
         i = 0
         while i < len(split) - 1:
-            if split[i] == left split[i+1] == right:
+            if split[i] == left and split[i+1] == right:
                 split[i] = left + right
                 split.pop(i+1)
             else:
@@ -49,7 +49,7 @@ def build_vocab(transcripts):
                 vocab[ch] = next_id
                 next_id += 1
 
-    while len(vocab) < 30_000:
+    while len(vocab) < 5_000:
         pair = merge(splits)
         left, right = pair
 

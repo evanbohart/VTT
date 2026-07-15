@@ -1,6 +1,7 @@
 from model.model import Model
 from data.data import Data
 from train import train
+from test import test
 
 import torch
 import torch.nn as nn
@@ -18,7 +19,7 @@ n_fft = 400
 hop_len = 160
 n_mels = 80
 encoder_seq_len = 1000
-decoder_seq_len = 64
+decoder_seq_len = 100
 
 d_model = 512
 h = 8
@@ -37,8 +38,8 @@ if len(sys.argv) == 1:
     err()
 
 if sys.argv[1] == 'train' and len(sys.argv) != 3:
-    err():
-elif sys.argv[1] == 'train'
+    err()
+elif sys.argv[1] == 'train':
     data = Data(
         dataset=torchaudio.datasets.LIBRISPEECH(
             root='.',
@@ -48,8 +49,8 @@ elif sys.argv[1] == 'train'
         n_fft=n_fft,
         hop_len=hop_len,
         n_mels=n_mels,
-        encoder_seq_le=encoder_seq_len,
-        decoder_seq_len=decoder_seq_len,
+        max_sample_len=encoder_seq_len,
+        max_transcript_len=decoder_seq_len,
         vocab=None,
         merges=None
     )
@@ -62,6 +63,7 @@ elif sys.argv[1] == 'train'
     )
 
     vocab_size = len(data.vocab)
+    print(list(data.vocab.items())[:100])
 
     model = Model(
         encoder_x_dim=n_mels,

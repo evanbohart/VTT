@@ -1,4 +1,4 @@
-from .tokenizer import tokenize, build_vocab
+from .tokenizer import build_vocab
 
 import torch
 import torch.nn as nn
@@ -26,25 +26,10 @@ class Data(Dataset):
 
         max_waveform_len = (max_sample_len - 1) * hop_len + n_fft
 
-        for i in range(len(dataset)):
-        waveform, sr, transcript, *_ = dataset[i]
-
-            waveform_len = waveform.shape[-1]
-
-            tokens = tokenize(transcript)
-            transcript_len = len(tokens) + 1
-
-            if (
-                waveform_len <= max_waveform_len and
-                transcript_len <= max_transcript_len
-            ):
-                self.valid_indices.append(i)
-
         transcripts = []
-
-        for index in self.valid_indices:
-            _, _, transcript, *_ = dataset[index]
-
+        
+        for i in range(len(dataset)):
+            _, _, transcript, *_ = dataset[i]
             transcripts.append(transcript)
 
         if vocab == None or merges == None:
@@ -52,6 +37,20 @@ class Data(Dataset):
         else:
             self.vocab = vocab
             self.merges = merges
+
+        for i in range(len(dataset)):
+            waveform, sr, transcript, *_ = dataset[i]
+
+            waveform_len = waveform.shape[-1]
+
+            tokens = self.encode(transcript)
+            transcript_len = len(tokens) + 1
+
+            if (
+                waveform_len <= max_waveform_len and
+                transcript_len <= max_transcript_len
+            ):
+                self.valid_indices.append(i)
 
         self.to_mel = transforms.MelSpectrogram(
             sample_rate=16000,
